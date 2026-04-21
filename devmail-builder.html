@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DevMail Builder Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#08080c;--surface:#0f0f15;--surface2:#161620;--surface3:#1e1e2a;--surface4:#26263a;
+  --border:#1e1e2c;--border2:#2a2a3e;--border3:#383852;
+  --accent:#6c63ff;--accent2:#9b94ff;--accent3:#c4bfff;--accent-bg:#12103a;
+  --green:#00e5a0;--green-bg:#001a12;--yellow:#ffd447;--red:#ff5f6d;--orange:#ff8c42;
+  --text:#f0f0f7;--text2:#8888aa;--text3:#44445a;
+  --mono:'JetBrains Mono',monospace;--display:'Syne',sans-serif;--sans:'Outfit',sans-serif;
+  --glow:0 0 20px rgba(108,99,255,.15);
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+
+/* Scanlines overlay */
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:9999;}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 18px;height:50px;background:var(--surface);border-bottom:1px solid var(--border2);flex-shrink:0;position:relative;}
+.topbar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.4;}
+.logo{font-family:var(--display);font-size:14px;font-weight:800;color:var(--text);letter-spacing:-.02em;display:flex;align-items:center;gap:10px;}
+.logo-badge{font-family:var(--mono);font-size:9px;font-weight:600;padding:2px 6px;background:var(--accent);color:#fff;border-radius:4px;letter-spacing:.06em;}
+.logo-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:glow-pulse 2s infinite;}
+@keyframes glow-pulse{0%,100%{box-shadow:0 0 4px var(--green);}50%{box-shadow:0 0 14px var(--green),0 0 28px var(--green);}}
+.topbar-center{display:flex;gap:4px;align-items:center;}
+.topbar-right{display:flex;gap:6px;align-items:center;}
+
+/* TABS STYLE NAV */
+.nav-pill{font-family:var(--mono);font-size:10px;font-weight:500;padding:5px 12px;border-radius:20px;cursor:pointer;border:1px solid transparent;color:var(--text3);transition:all .2s;letter-spacing:.04em;text-transform:uppercase;}
+.nav-pill:hover{color:var(--text2);border-color:var(--border2);}
+.nav-pill.active{background:var(--accent-bg);border-color:var(--accent);color:var(--accent2);}
+
+.btn{font-family:var(--sans);font-size:12px;font-weight:500;padding:6px 14px;border-radius:7px;cursor:pointer;border:1px solid var(--border2);background:var(--surface2);color:var(--text);transition:all .15s;white-space:nowrap;line-height:1.2;}
+.btn:hover{border-color:var(--accent);color:var(--accent2);}
+.btn-accent{background:linear-gradient(135deg,var(--accent),#9160ff);border-color:transparent;color:#fff;box-shadow:0 0 16px rgba(108,99,255,.3);}
+.btn-accent:hover{box-shadow:0 0 24px rgba(108,99,255,.5);transform:translateY(-1px);}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--text2);}
+.btn-ghost:hover{background:var(--surface2);border-color:var(--border2);color:var(--text);}
+.btn-green{background:transparent;border-color:var(--green);color:var(--green);}
+.btn-green:hover{background:var(--green-bg);}
+.btn-sm{padding:4px 10px;font-size:11px;}
+.btn-xs{padding:3px 8px;font-size:10px;}
+
+/* LAYOUT */
+.main{display:flex;flex:1;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:300px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border2);display:flex;flex-direction:column;overflow:hidden;}
+.sidebar-tabs{display:flex;flex-wrap:wrap;gap:2px;padding:8px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg);}
+.stab{flex-shrink:0;padding:5px 9px;font-size:10px;font-weight:500;color:var(--text3);cursor:pointer;letter-spacing:.06em;text-transform:uppercase;border-radius:5px;border:1px solid transparent;transition:all .15s;font-family:var(--mono);white-space:nowrap;}
+.stab.active{color:var(--accent2);background:var(--accent-bg);border-color:var(--accent);}
+.stab:hover:not(.active){color:var(--text);background:var(--surface2);}
+.sidebar-body{flex:1;overflow-y:auto;padding:14px;scrollbar-width:thin;scrollbar-color:var(--border2) transparent;}
+
+/* FIELDS */
+.fg{margin-bottom:20px;}
+.fgt{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;font-family:var(--mono);}
+.fgt-icon{font-size:12px;}
+.field{margin-bottom:9px;}
+.field label{display:block;font-size:10.5px;color:var(--text2);margin-bottom:3px;font-weight:500;font-family:var(--mono);}
+.field input,.field textarea,.field select{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:var(--sans);font-size:12px;padding:6px 10px;outline:none;transition:border-color .15s,box-shadow .15s;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-bg);}
+.field textarea{min-height:68px;line-height:1.6;resize:vertical;}
+.field select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='%238888aa'%3E%3Cpath d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;}
+.field input[type="range"]{padding:8px 0;accent-color:var(--accent);}
+.field-hint{font-size:10px;color:var(--text3);margin-top:3px;font-family:var(--mono);}
+
+.color-row{display:flex;gap:7px;align-items:center;}
+.color-row input[type="color"]{width:34px;height:30px;padding:2px;border-radius:6px;cursor:pointer;flex-shrink:0;border:1px solid var(--border2);background:var(--surface2);}
+.color-row input[type="text"]{flex:1;}
+
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-row-label{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:7px;}
+.toggle-row-label .icon{font-size:14px;width:20px;text-align:center;}
+.tog{width:34px;height:18px;background:var(--border2);border-radius:9px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;}
+.tog.on{background:var(--accent);}
+.tog::after{content:'';position:absolute;width:14px;height:14px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.4);}
+.tog.on::after{left:18px;}
+
+/* TAGS */
+.tag-list{display:flex;flex-wrap:wrap;gap:5px;margin:5px 0 4px;}
+.tag{font-size:11px;padding:3px 9px;border-radius:4px;background:var(--surface3);border:1px solid var(--border2);color:var(--text2);display:flex;align-items:center;gap:4px;font-family:var(--mono);}
+.tag .rm{cursor:pointer;color:var(--text3);font-size:16px;line-height:1;transition:color .1s;}
+.tag .rm:hover{color:var(--red);}
+.add-row{display:flex;gap:5px;margin-top:5px;}
+.add-row input{flex:1;}
+.add-row button{background:var(--surface2);border:1px solid var(--border2);color:var(--text2);border-radius:6px;padding:0 11px;font-size:18px;cursor:pointer;transition:all .15s;line-height:1;}
+.add-row button:hover{border-color:var(--accent);color:var(--accent2);}
+
+/* CARDS */
+.proj-card,.book-card,.exp-card,.award-card,.lang-card,.custom-card{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:11px;margin-bottom:8px;position:relative;transition:border-color .15s;}
+.proj-card:hover,.book-card:hover,.exp-card:hover,.award-card:hover,.custom-card:hover{border-color:var(--border3);}
+.card-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px;font-family:var(--display);}
+.rm-btn{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;line-height:1;transition:color .15s;}
+.rm-btn:hover{color:var(--red);}
+
+/* SECTION ACCORDION */
+.acc-header{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:var(--surface2);border-radius:7px;cursor:pointer;margin-bottom:6px;border:1px solid var(--border2);transition:all .15s;}
+.acc-header:hover{border-color:var(--border3);background:var(--surface3);}
+.acc-header-left{display:flex;align-items:center;gap:8px;}
+.acc-title{font-size:11px;font-weight:500;color:var(--text2);}
+.acc-arrow{color:var(--text3);font-size:10px;transition:transform .2s;}
+.acc-header.open .acc-arrow{transform:rotate(90deg);}
+.acc-body{padding:0 2px 8px;display:none;}
+.acc-body.open{display:block;}
+
+/* PREVIEW */
+.preview-pane{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#090912;}
+.preview-bar{display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:40px;background:var(--surface);border-bottom:1px solid var(--border2);flex-shrink:0;}
+.win-dots{display:flex;gap:5px;}
+.wd{width:10px;height:10px;border-radius:50%;}
+.wd-r{background:#ff5f57;}.wd-y{background:#febc2e;}.wd-g{background:#28c840;}
+.url-bar{font-family:var(--mono);font-size:10px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:4px 14px;min-width:180px;text-align:center;}
+.vp-btns{display:flex;gap:4px;}
+.vpbtn{font-size:11px;padding:4px 10px;border-radius:5px;background:transparent;border:1px solid var(--border2);color:var(--text3);cursor:pointer;font-family:var(--sans);transition:all .15s;}
+.vpbtn.active{border-color:var(--accent);color:var(--accent2);background:var(--accent-bg);}
+
+.preview-viewport{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;background:radial-gradient(ellipse at 50% 0%,rgba(108,99,255,.05) 0%,transparent 60%);}
+#pframe{background:white;border-radius:6px;box-shadow:0 16px 64px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.05);transition:width .3s ease;}
+#pframe.desktop{width:100%;max-width:640px;}
+#pframe.mobile{width:375px;}
+#pframe.tablet{width:500px;}
+
+/* CODE PANEL */
+.code-panel{width:380px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border2);display:flex;flex-direction:column;overflow:hidden;transition:width .25s ease;}
+.code-panel.hidden{width:0;overflow:hidden;}
+.code-top{display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:40px;border-bottom:1px solid var(--border2);flex-shrink:0;}
+.code-top-title{font-family:var(--mono);font-size:11px;color:var(--text3);}
+#codeout{flex:1;overflow:auto;padding:14px;font-family:var(--mono);font-size:10px;line-height:1.8;color:#8892b0;white-space:pre;scrollbar-width:thin;scrollbar-color:var(--border2) transparent;background:#04040a;}
+
+/* THEME GRID */
+.theme-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+.theme-pill{padding:9px 8px;border-radius:8px;border:1.5px solid var(--border2);cursor:pointer;transition:all .15s;text-align:center;}
+.theme-pill:hover{border-color:var(--border3);transform:translateY(-1px);}
+.theme-pill.active{border-color:var(--accent);background:var(--accent-bg);box-shadow:var(--glow);}
+.theme-pill-name{font-size:10px;font-weight:600;color:var(--text2);display:block;margin-top:5px;font-family:var(--mono);}
+.theme-swatch{display:flex;gap:3px;justify-content:center;}
+.swatch{width:12px;height:12px;border-radius:2px;}
+
+/* FONT GRID */
+.font-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.font-pill{padding:8px 10px;border-radius:7px;border:1.5px solid var(--border2);cursor:pointer;transition:all .15s;text-align:center;}
+.font-pill.active{border-color:var(--green);background:var(--green-bg);}
+.font-pill:hover:not(.active){border-color:var(--border3);}
+.font-pill-name{font-size:12px;color:var(--text2);display:block;}
+.font-pill-label{font-size:9px;color:var(--text3);font-family:var(--mono);margin-top:2px;display:block;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;font-size:12px;font-weight:600;padding:10px 18px;border-radius:8px;opacity:0;transform:translateY(6px);transition:all .2s;pointer-events:none;z-index:9998;font-family:var(--mono);}
+.toast.success{background:var(--green);color:#000;}
+.toast.error{background:var(--red);color:#fff;}
+.toast.show{opacity:1;transform:translateY(0);}
+
+/* STAT BADGE */
+.stat-badge{display:inline-flex;align-items:center;gap:5px;background:var(--surface3);border:1px solid var(--border2);border-radius:6px;padding:5px 10px;font-family:var(--mono);font-size:10px;color:var(--text2);}
+.stat-badge .val{color:var(--accent2);font-weight:600;}
+
+/* DIVIDER */
+.divider{border:none;border-top:1px solid var(--border);margin:16px 0;}
+
+/* DRAG HANDLES */
+.drag-handle{cursor:grab;color:var(--text3);font-size:12px;padding:2px 4px;margin-right:4px;}
+.drag-handle:active{cursor:grabbing;}
+
+/* CUSTOM SECTION */
+.custom-sec-preview{background:var(--surface3);border-radius:6px;padding:8px;font-size:11px;color:var(--text2);margin-top:6px;font-family:var(--mono);line-height:1.5;word-break:break-all;}
+
+/* STATUS INDICATOR */
+.status-dot{width:5px;height:5px;border-radius:50%;display:inline-block;margin-right:5px;}
+.status-dot.live{background:var(--green);box-shadow:0 0 6px var(--green);}
+.status-dot.off{background:var(--text3);}
+
+/* MINI PREVIEW STRIP */
+.color-preview-strip{display:flex;gap:3px;margin-top:6px;}
+.color-strip{height:8px;flex:1;border-radius:2px;}
+
+/* RANGE DISPLAY */
+.range-row{display:flex;align-items:center;gap:8px;}
+.range-val{font-family:var(--mono);font-size:11px;color:var(--accent2);min-width:32px;text-align:right;}
+
+/* IMPORT/EXPORT */
+.json-area{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--green);font-family:var(--mono);font-size:10px;padding:8px;line-height:1.5;resize:vertical;min-height:80px;outline:none;}
+.json-area:focus{border-color:var(--accent);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-dot"></div>
+    DevMail Builder
+    <span class="logo-badge">PRO</span>
+  </div>
+  <div class="topbar-center">
+    <span class="nav-pill active" onclick="mainTab('editor',this)" id="mtab-editor">✦ Editor</span>
+    <span class="nav-pill" onclick="mainTab('preview',this)" id="mtab-preview">⬡ Preview</span>
+    <span class="nav-pill" onclick="mainTab('export',this)" id="mtab-export">⇡ Export</span>
+  </div>
+  <div class="topbar-right">
+    <div class="stat-badge"><span class="status-dot live"></span>Live <span class="val" id="char-count">—</span></div>
+    <button class="btn btn-ghost btn-sm" onclick="toggleCode()" id="codebtn">‹/› Code</button>
+    <button class="btn btn-sm" onclick="downloadHTML()">⬇ HTML</button>
+    <button class="btn btn-accent btn-sm" onclick="copyHTML()">⊕ Copy</button>
+  </div>
+</div>
+
+<div class="main" id="main-editor">
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<div class="sidebar">
+  <div class="sidebar-tabs">
+    <div class="stab active" onclick="stab('profile',this)">Profile</div>
+    <div class="stab" onclick="stab('skills',this)">Skills</div>
+    <div class="stab" onclick="stab('projects',this)">Projects</div>
+    <div class="stab" onclick="stab('experience',this)">Exp</div>
+    <div class="stab" onclick="stab('social',this)">Social</div>
+    <div class="stab" onclick="stab('books',this)">Books</div>
+    <div class="stab" onclick="stab('awards',this)">Awards</div>
+    <div class="stab" onclick="stab('custom',this)">Custom</div>
+    <div class="stab" onclick="stab('design',this)">Design</div>
+    <div class="stab" onclick="stab('sections',this)">Layout</div>
+    <div class="stab" onclick="stab('settings',this)">Config</div>
+  </div>
+
+  <!-- PROFILE TAB -->
+  <div class="sidebar-body" id="t-profile">
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">🪪</span> Identity</div>
+      <div class="field"><label>Avatar URL</label><input id="f-avatar" value="https://avatars.githubusercontent.com/u/218765473?v=4" oninput="render()"/></div>
+      <div class="field"><label>Avatar Shape</label>
+        <select id="f-avshape" onchange="render()">
+          <option value="circle">● Circle</option>
+          <option value="square">■ Rounded Square</option>
+          <option value="hexagon">⬡ Hexagon</option>
+        </select>
+      </div>
+      <div class="field"><label>Full Name</label><input id="f-name" value="Not Nahid" oninput="render()"/></div>
+      <div class="field"><label>Pronouns</label><input id="f-pronouns" value="he/him" placeholder="he/him" oninput="render()"/></div>
+      <div class="field"><label>Title / Tagline</label><input id="f-role" value="Front-End Developer · Bangladesh" oninput="render()"/></div>
+      <div class="field"><label>Bio</label><textarea id="f-bio" oninput="render()">I'm a self-taught developer from Bangladesh with a passion for front-end development and creating intuitive, user-friendly interfaces. Currently diving deeper into React and full-stack development.</textarea></div>
+    </div>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">📡</span> Contact & Links</div>
+      <div class="field"><label>Email</label><input id="f-email" value="nahidul.live@gmail.com" oninput="render()"/></div>
+      <div class="field"><label>Website URL</label><input id="f-website" value="http://nahid.rf.gd/" oninput="render()"/></div>
+      <div class="field"><label>Location</label><input id="f-location" value="Bangladesh, GMT+6" oninput="render()"/></div>
+      <div class="field"><label>Phone (optional)</label><input id="f-phone" placeholder="+1 (555) 000-0000" oninput="render()"/></div>
+    </div>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">💼</span> Availability</div>
+      <div class="field">
+        <select id="f-avail" onchange="render()">
+          <option value="open">✅ Open to opportunities</option>
+          <option value="busy">🔴 Not available</option>
+          <option value="freelance">💼 Available for freelance</option>
+          <option value="contract">🤝 Contract work only</option>
+          <option value="collab">🛠️ Open to collaboration</option>
+          <option value="none">— Hide badge</option>
+        </select>
+      </div>
+      <div class="field"><label>Custom availability text (override)</label><input id="f-avail-custom" placeholder="Leave blank for default" oninput="render()"/></div>
+    </div>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">🎯</span> Stats (optional)</div>
+      <div class="field"><label>Years of experience</label><input id="f-years" placeholder="3" oninput="render()"/></div>
+      <div class="field"><label>Projects completed</label><input id="f-projcount" placeholder="20+" oninput="render()"/></div>
+      <div class="field"><label>GitHub stars total</label><input id="f-stars" placeholder="100+" oninput="render()"/></div>
+    </div>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">🔘</span> CTA Buttons</div>
+      <div class="field"><label>Primary button label</label><input id="f-btn1" value="Email Me" oninput="render()"/></div>
+      <div class="field"><label>Primary button URL</label><input id="f-btn1url" placeholder="mailto:" oninput="render()"/></div>
+      <div class="field"><label>Secondary button label</label><input id="f-btn2" value="Visit Website" oninput="render()"/></div>
+      <div class="field"><label>Secondary button URL</label><input id="f-btn2url" placeholder="https://" oninput="render()"/></div>
+      <div class="field"><label>Tertiary button label (optional)</label><input id="f-btn3" placeholder="Download CV" oninput="render()"/></div>
+      <div class="field"><label>Tertiary button URL</label><input id="f-btn3url" placeholder="https://…/cv.pdf" oninput="render()"/></div>
+    </div>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">🦶</span> Footer</div>
+      <div class="field"><label>Footer text</label><input id="f-footer" value="GMT+6:00 · Bangladesh Standard Time" oninput="render()"/></div>
+      <div class="field"><label>Unsubscribe link text</label><input id="f-unsub" value="Unsubscribe" oninput="render()"/></div>
+      <div class="field"><label>Footer copyright line</label><input id="f-copyright" placeholder="© 2025 Your Name" oninput="render()"/></div>
+    </div>
+  </div>
+
+  <!-- SKILLS TAB -->
+  <div class="sidebar-body" id="t-skills" style="display:none">
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">💬</span> Languages</div>
+      <div class="tag-list" id="tg-lang"></div>
+      <div class="add-row"><input id="ai-lang" placeholder="Add language…" onkeydown="if(event.key==='Enter')addTag('lang')"/><button onclick="addTag('lang')">+</button></div>
+    </div>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">⚛️</span> Frameworks & Libraries</div>
+      <div class="tag-list" id="tg-fw"></div>
+      <div class="add-row"><input id="ai-fw" placeholder="Add framework…" onkeydown="if(event.key==='Enter')addTag('fw')"/><button onclick="addTag('fw')">+</button></div>
+    </div>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">🛠️</span> Tools & Platforms</div>
+      <div class="tag-list" id="tg-tools"></div>
+      <div class="add-row"><input id="ai-tools" placeholder="Add tool…" onkeydown="if(event.key==='Enter')addTag('tools')"/><button onclick="addTag('tools')">+</button></div>
+    </div>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">🌱</span> Currently Learning</div>
+      <div class="tag-list" id="tg-learn"></div>
+      <div class="add-row"><input id="ai-learn" placeholder="Add…" onkeydown="if(event.key==='Enter')addTag('learn')"/><button onclick="addTag('learn')">+</button></div>
+    </div>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">🔮</span> Interests / Hobbies</div>
+      <div class="tag-list" id="tg-interest"></div>
+      <div class="add-row"><input id="ai-interest" placeholder="Add interest…" onkeydown="if(event.key==='Enter')addTag('interest')"/><button onclick="addTag('interest')">+</button></div>
+    </div>
+  </div>
+
+  <!-- PROJECTS TAB -->
+  <div class="sidebar-body" id="t-projects" style="display:none">
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">📂</span> Projects <button class="btn btn-sm" style="float:right;margin-top:-2px" onclick="addProject()">+ Add</button></div>
+      <div id="proj-list"></div>
+    </div>
+  </div>
+
+  <!-- EXPERIENCE TAB -->
+  <div class="sidebar-body" id="t-experience" style="display:none">
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">🏢</span> Work Experience <button class="btn btn-sm" style="float:right;margin-top:-2px" onclick="addExp()">+ Add</button></div>
+      <div id="exp-list"></div>
+    </div>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">🎓</span> Education <button class="btn btn-sm" style="float:right;margin-top:-2px" onclick="addEdu()">+ Add</button></div>
+      <div id="edu-list"></div>
+    </div>
+  </div>
+
+  <!-- SOCIAL TAB -->
+  <div class="sidebar-body" id="t-social" style="display:none">
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">🔗</span> Social Links</div>
+      <div class="field"><label>GitHub</label><input id="s-github" value="https://github.com/NotNahid" oninput="render()"/></div>
+      <div class="field"><label>Twitter / X</label><input id="s-twitter" value="" oninput="render()"/></div>
+      <div class="field"><label>LinkedIn</label><input id="s-linkedin" value="" oninput="render()"/></div>
+      <div class="field"><label>Instagram</label><input id="s-instagram" value="" oninput="render()"/></div>
+      <div class="field"><label>Threads</label><input id="s-threads" value="https://www.threads.com/@pustokkit" oninput="render()"/></div>
+      <div class="field"><label>Facebook</label><input id="s-facebook" value="" oninput="render()"/></div>
+      <div class="field"><label>YouTube</label><input id="s-youtube" value="" oninput="render()"/></div>
+      <div class="field"><label>Dev.to</label><input id="s-devto" value="" oninput="render()"/></div>
+      <div class="field"><label>Hashnode</label><input id="s-hashnode" value="" oninput="render()"/></div>
+      <div class="field"><label>Medium</label><input id="s-medium" value="" oninput="render()"/></div>
+      <div class="field"><label>Dribbble</label><input id="s-dribbble" value="" oninput="render()"/></div>
+      <div class="field"><label>Behance</label><input id="s-behance" value="" oninput="render()"/></div>
+      <div class="field"><label>Codepen</label><input id="s-codepen" value="" oninput="render()"/></div>
+      <div class="field"><label>Stack Overflow</label><input id="s-stackoverflow" value="" oninput="render()"/></div>
+      <div class="field"><label>Discord Server</label><input id="s-discord" value="" oninput="render()"/></div>
+      <div class="field"><label>Telegram</label><input id="s-telegram" value="" oninput="render()"/></div>
+      <div class="field"><label>WhatsApp</label><input id="s-whatsapp" value="" oninput="render()"/></div>
+      <div class="field"><label>Custom Link 1 label</label><input id="s-custom1-label" placeholder="My Portfolio" oninput="render()"/></div>
+      <div class="field"><label>Custom Link 1 URL</label><input id="s-custom1-url" placeholder="https://…" oninput="render()"/></div>
+      <div class="field"><label>Custom Link 2 label</label><input id="s-custom2-label" placeholder="My Resume" oninput="render()"/></div>
+      <div class="field"><label>Custom Link 2 URL</label><input id="s-custom2-url" placeholder="https://…" oninput="render()"/></div>
+    </div>
+  </div>
+
+  <!-- BOOKS TAB -->
+  <div class="sidebar-body" id="t-books" style="display:none">
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">📚</span> Reading List <button class="btn btn-sm" style="float:right;margin-top:-2px" onclick="addBook()">+ Add</button></div>
+      <div id="book-list"></div>
+    </div>
+  </div>
+
+  <!-- AWARDS TAB -->
+  <div class="sidebar-body" id="t-awards" style="display:none">
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">🏆</span> Achievements & Certs <button class="btn btn-sm" style="float:right;margin-top:-2px" onclick="addAward()">+ Add</button></div>
+      <div id="award-list"></div>
+    </div>
+  </div>
+
+  <!-- CUSTOM SECTIONS TAB -->
+  <div class="sidebar-body" id="t-custom" style="display:none">
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">🧩</span> Custom Sections <button class="btn btn-sm" style="float:right;margin-top:-2px" onclick="addCustomSection()">+ Add</button></div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6;">Add any section with a title and raw HTML content for maximum flexibility.</p>
+      <div id="custom-list"></div>
+    </div>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">📣</span> Banner / Announcement</div>
+      <div class="field"><label>Banner text</label><input id="f-banner" placeholder="🚀 I just launched something new!" oninput="render()"/></div>
+      <div class="field"><label>Banner link URL</label><input id="f-bannerurl" placeholder="https://…" oninput="render()"/></div>
+      <div class="field"><label>Banner style</label>
+        <select id="f-bannerstyle" onchange="render()">
+          <option value="accent">Accent</option>
+          <option value="green">Success</option>
+          <option value="yellow">Warning</option>
+          <option value="red">Urgent</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">💬</span> Quote / Motto</div>
+      <div class="field"><label>Quote text</label><input id="f-quote" placeholder=""Code is poetry."" oninput="render()"/></div>
+      <div class="field"><label>Quote attribution</label><input id="f-quoteattr" placeholder="— Someone Wise" oninput="render()"/></div>
+    </div>
+  </div>
+
+  <!-- DESIGN TAB -->
+  <div class="sidebar-body" id="t-design" style="display:none">
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">🎨</span> Themes</div>
+      <div class="theme-grid" id="theme-grid"></div>
+    </div>
+    <hr class="divider"/>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">🔤</span> Font Pairing</div>
+      <div class="font-grid" id="font-grid"></div>
+    </div>
+    <hr class="divider"/>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">🎨</span> Custom Colors</div>
+      <div class="field"><label>Accent / Primary</label><div class="color-row"><input type="color" id="cc-accent" oninput="syncC('cc-accent','ct-accent');render()"/><input type="text" id="ct-accent" oninput="syncCT('ct-accent','cc-accent');render()"/></div></div>
+      <div class="field"><label>Accent 2 / Gradient end</label><div class="color-row"><input type="color" id="cc-accent2" oninput="syncC('cc-accent2','ct-accent2');render()"/><input type="text" id="ct-accent2" oninput="syncCT('ct-accent2','cc-accent2');render()"/></div></div>
+      <div class="field"><label>Background</label><div class="color-row"><input type="color" id="cc-bg" oninput="syncC('cc-bg','ct-bg');render()"/><input type="text" id="ct-bg" oninput="syncCT('ct-bg','cc-bg');render()"/></div></div>
+      <div class="field"><label>Card surface</label><div class="color-row"><input type="color" id="cc-card" oninput="syncC('cc-card','ct-card');render()"/><input type="text" id="ct-card" oninput="syncCT('ct-card','cc-card');render()"/></div></div>
+      <div class="field"><label>Heading text</label><div class="color-row"><input type="color" id="cc-head" oninput="syncC('cc-head','ct-head');render()"/><input type="text" id="ct-head" oninput="syncCT('ct-head','cc-head');render()"/></div></div>
+      <div class="field"><label>Body text</label><div class="color-row"><input type="color" id="cc-body" oninput="syncC('cc-body','ct-body');render()"/><input type="text" id="ct-body" oninput="syncCT('ct-body','cc-body');render()"/></div></div>
+      <div class="field"><label>Muted text</label><div class="color-row"><input type="color" id="cc-muted" oninput="syncC('cc-muted','ct-muted');render()"/><input type="text" id="ct-muted" oninput="syncCT('ct-muted','cc-muted');render()"/></div></div>
+      <div class="field"><label>Border color</label><div class="color-row"><input type="color" id="cc-border" oninput="syncC('cc-border','ct-border');render()"/><input type="text" id="ct-border" oninput="syncCT('ct-border','cc-border');render()"/></div></div>
+      <div class="field"><label>Button text color</label><div class="color-row"><input type="color" id="cc-btntext" oninput="syncC('cc-btntext','ct-btntext');render()"/><input type="text" id="ct-btntext" oninput="syncCT('ct-btntext','cc-btntext');render()"/></div></div>
+    </div>
+    <hr class="divider"/>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">📐</span> Layout & Spacing</div>
+      <div class="field"><label>Max width (px)</label>
+        <div class="range-row"><input type="range" id="l-maxw" value="600" min="400" max="800" step="10" oninput="document.getElementById('v-maxw').textContent=this.value+'px';render()"/><span class="range-val" id="v-maxw">600px</span></div>
+      </div>
+      <div class="field"><label>Border radius (px)</label>
+        <div class="range-row"><input type="range" id="l-radius" value="8" min="0" max="24" oninput="document.getElementById('v-radius').textContent=this.value+'px';render()"/><span class="range-val" id="v-radius">8px</span></div>
+      </div>
+      <div class="field"><label>Avatar size (px)</label>
+        <div class="range-row"><input type="range" id="l-avsize" value="88" min="48" max="160" step="4" oninput="document.getElementById('v-avsize').textContent=this.value+'px';render()"/><span class="range-val" id="v-avsize">88px</span></div>
+      </div>
+      <div class="field"><label>Section spacing (px)</label>
+        <div class="range-row"><input type="range" id="l-spacing" value="24" min="8" max="56" step="4" oninput="document.getElementById('v-spacing').textContent=this.value+'px';render()"/><span class="range-val" id="v-spacing">24px</span></div>
+      </div>
+      <div class="field"><label>Body font size (px)</label>
+        <div class="range-row"><input type="range" id="l-fontsize" value="15" min="12" max="18" oninput="document.getElementById('v-fontsize').textContent=this.value+'px';render()"/><span class="range-val" id="v-fontsize">15px</span></div>
+      </div>
+      <div class="field"><label>Header alignment</label>
+        <select id="l-headeralign" onchange="render()">
+          <option value="center">Center</option>
+          <option value="left">Left</option>
+        </select>
+      </div>
+    </div>
+    <hr class="divider"/>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">✨</span> Visual Effects</div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">🌈</span> Gradient header background</div><div class="tog on" id="fx-gradheader" onclick="togFx(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">🔲</span> Card shadows</div><div class="tog on" id="fx-shadows" onclick="togFx(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">⬛</span> Dark mode email</div><div class="tog" id="fx-darkmode" onclick="togFx(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">📏</span> Divider lines between sections</div><div class="tog on" id="fx-dividers" onclick="togFx(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">🎭</span> Button gradient</div><div class="tog on" id="fx-btngradient" onclick="togFx(this)"></div></div>
+    </div>
+  </div>
+
+  <!-- SECTIONS/LAYOUT TAB -->
+  <div class="sidebar-body" id="t-sections" style="display:none">
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">🗂️</span> Section Visibility & Order</div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6;">Toggle each section on/off. They appear in the order listed here.</p>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">📣</span> Banner</div><div class="tog" id="sec-banner" onclick="togSec(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">🪪</span> Header (Avatar + Name)</div><div class="tog on" id="sec-header" onclick="togSec(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">📊</span> Quick Stats</div><div class="tog on" id="sec-stats" onclick="togSec(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">💼</span> Availability Badge</div><div class="tog on" id="sec-avail" onclick="togSec(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">💬</span> Quote / Motto</div><div class="tog" id="sec-quote" onclick="togSec(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">😌</span> About Me</div><div class="tog on" id="sec-about" onclick="togSec(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">🛠️</span> Skills</div><div class="tog on" id="sec-skills" onclick="togSec(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">🌱</span> Currently Learning</div><div class="tog on" id="sec-learn" onclick="togSec(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">🔮</span> Interests</div><div class="tog" id="sec-interests" onclick="togSec(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">🏢</span> Experience</div><div class="tog on" id="sec-experience" onclick="togSec(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">🎓</span> Education</div><div class="tog on" id="sec-education" onclick="togSec(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">📂</span> Projects</div><div class="tog on" id="sec-projects" onclick="togSec(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">🏆</span> Awards & Certs</div><div class="tog on" id="sec-awards" onclick="togSec(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">📚</span> Reading List</div><div class="tog on" id="sec-books" onclick="togSec(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">🔗</span> Social Links</div><div class="tog on" id="sec-social" onclick="togSec(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">✉️</span> CTA Buttons</div><div class="tog on" id="sec-cta" onclick="togSec(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">🧩</span> Custom Sections</div><div class="tog on" id="sec-custom" onclick="togSec(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">🦶</span> Footer</div><div class="tog on" id="sec-footer" onclick="togSec(this)"></div></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div class="sidebar-body" id="t-settings" style="display:none">
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">⚙️</span> Email Meta</div>
+      <div class="field"><label>Subject line (for reference)</label><input id="f-subject" placeholder="Connecting from [Your Name]" oninput="render()"/></div>
+      <div class="field"><label>Preheader text (preview in inbox)</label><input id="f-preheader" placeholder="Front-end dev from Bangladesh…" oninput="render()"/></div>
+      <div class="field"><label>Language / dir</label>
+        <select id="f-lang" onchange="render()">
+          <option value="en">English (LTR)</option>
+          <option value="ar">Arabic (RTL)</option>
+          <option value="he">Hebrew (RTL)</option>
+          <option value="fa">Persian (RTL)</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">🔧</span> Output Settings</div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">🗜️</span> Minify HTML output</div><div class="tog" id="set-minify" onclick="togSet(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">📧</span> Inline CSS (email safe)</div><div class="tog on" id="set-inline" onclick="togSet(this)"></div></div>
+      <div class="toggle-row"><div class="toggle-row-label"><span class="icon">🔒</span> Include meta charset</div><div class="tog on" id="set-charset" onclick="togSet(this)"></div></div>
+    </div>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">💾</span> Save / Load</div>
+      <button class="btn btn-green" style="width:100%;margin-bottom:6px" onclick="saveConfig()">⬇ Save Config (JSON)</button>
+      <button class="btn" style="width:100%;margin-bottom:6px" onclick="document.getElementById('load-input').click()">⬆ Load Config</button>
+      <input type="file" id="load-input" accept=".json" style="display:none" onchange="loadConfig(event)"/>
+      <button class="btn" style="width:100%;margin-bottom:6px" onclick="exportConfigString()">📋 Copy Config JSON</button>
+      <button class="btn" style="width:100%;color:var(--red);border-color:var(--red);background:transparent" onclick="resetAll()">⚠ Reset All</button>
+    </div>
+    <div class="fg">
+      <div class="fgt"><span class="fgt-icon">📋</span> Import Config JSON</div>
+      <textarea class="json-area" id="import-json" placeholder='Paste config JSON here…'></textarea>
+      <button class="btn btn-sm" style="margin-top:6px;width:100%" onclick="importConfigFromField()">Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ PREVIEW ══════════════ -->
+<div class="preview-pane">
+  <div class="preview-bar">
+    <div class="win-dots"><div class="wd wd-r"></div><div class="wd wd-y"></div><div class="wd wd-g"></div></div>
+    <div class="url-bar" id="preview-url">devmail · preview</div>
+    <div class="vp-btns">
+      <button class="vpbtn active" onclick="setVP('desktop',this)">🖥</button>
+      <button class="vpbtn" onclick="setVP('tablet',this)">▣</button>
+      <button class="vpbtn" onclick="setVP('mobile',this)">📱</button>
+    </div>
+  </div>
+  <div class="preview-viewport">
+    <iframe id="pframe" class="desktop" frameborder="0" style="height:800px;"></iframe>
+  </div>
+</div>
+
+<!-- ══════════════ CODE PANEL ══════════════ -->
+<div class="code-panel hidden" id="codepanel">
+  <div class="code-top">
+    <span class="code-top-title">output.html</span>
+    <div style="display:flex;gap:5px;">
+      <button class="btn btn-green btn-sm" onclick="copyHTML()">Copy</button>
+      <button class="btn btn-sm" onclick="downloadHTML()">⬇</button>
+    </div>
+  </div>
+  <pre id="codeout"></pre>
+</div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════ DATA ════════════
+const T = {
+  lang:['HTML','CSS','JavaScript','Python','TypeScript'],
+  fw:['React','Next.js','Tailwind CSS'],
+  tools:['Git','GitHub','Firebase','VS Code'],
+  learn:['Next.js','Tailwind CSS','Firebase'],
+  interest:['Open Source','UI Design','Music','Reading'],
+};
+
+let projects = [
+  {name:'fti',lang:'JavaScript',stars:17,forks:1,desc:'A JavaScript project',url:'https://github.com/NotNahid/fti',featured:true},
+  {name:'NotNahid',lang:'Python',stars:17,forks:3,desc:'GitHub profile readme',url:'https://github.com/NotNahid',featured:false},
+  {name:'litnew',lang:'HTML',stars:16,forks:1,desc:'HTML project',url:'https://github.com/NotNahid/litnew',featured:false},
+  {name:'Nahid',lang:'TypeScript',stars:16,forks:0,desc:'Portfolio website',url:'https://github.com/NotNahid/Nahid',featured:false},
+];
+
+let experiences = [
+  {role:'Front-End Developer',company:'Freelance',period:'2022 – Present',desc:'Building responsive websites and web apps for clients worldwide.',current:true},
+];
+
+let educations = [
+  {degree:'Secondary School Certificate',school:'Dhaka Board','year':'2022','desc':''},
+];
+
+let books = [
+  {title:'বলাকা',author:'Rabindranath Tagore',rating:'3.8',status:'read'},
+  {title:'The Plague',author:'Albert Camus',rating:'4.05',status:'reading'},
+  {title:'In Search of Lost Time',author:'Marcel Proust',rating:'4.35',status:'want'},
+  {title:'The Broken Wings',author:'Kahlil Gibran',rating:'4.11',status:'read'},
+];
+
+let awards = [
+  {title:'GitHub Arctic Code Vault Contributor',org:'GitHub',year:'2020',icon:'🏔️'},
+];
+
+let customSections = [];
+
+const secs = {};
+document.querySelectorAll('.tog[id^="sec-"]').forEach(t=>secs[t.id]=t.classList.contains('on'));
+const fxs = {};
+document.querySelectorAll('.tog[id^="fx-"]').forEach(t=>fxs[t.id]=t.classList.contains('on'));
+const sets = {};
+document.querySelectorAll('.tog[id^="set-"]').forEach(t=>sets[t.id]=t.classList.contains('on'));
+
+const THEMES = [
+  {name:'Classic',accent:'#4f46e5',accent2:'#7c6af7',bg:'#f9fafb',card:'#f3f4f6',head:'#111827',body:'#374151',muted:'#6b7280',border:'#e5e7eb',btntext:'#ffffff'},
+  {name:'Midnight',accent:'#818cf8',accent2:'#c4b5fd',bg:'#0f0f1a',card:'#1a1a2e',head:'#e2e8f0',body:'#94a3b8',muted:'#64748b',border:'#1e293b',btntext:'#ffffff'},
+  {name:'Emerald',accent:'#059669',accent2:'#34d399',bg:'#f0fdf4',card:'#dcfce7',head:'#064e3b',body:'#065f46',muted:'#6b7280',border:'#a7f3d0',btntext:'#ffffff'},
+  {name:'Sunset',accent:'#ea580c',accent2:'#fb923c',bg:'#fff7ed',card:'#ffedd5',head:'#431407',body:'#7c2d12',muted:'#9a3412',border:'#fed7aa',btntext:'#ffffff'},
+  {name:'Ocean',accent:'#0891b2',accent2:'#22d3ee',bg:'#ecfeff',card:'#cffafe',head:'#083344',body:'#0e7490',muted:'#06b6d4',border:'#a5f3fc',btntext:'#ffffff'},
+  {name:'Rose',accent:'#e11d48',accent2:'#fb7185',bg:'#1a0010',card:'#2d0020',head:'#fce7f3',body:'#fbcfe8',muted:'#f9a8d4',border:'#3d0030',btntext:'#ffffff'},
+  {name:'Amber',accent:'#d97706',accent2:'#fbbf24',bg:'#fffbeb',card:'#fef3c7',head:'#451a03',body:'#78350f',muted:'#92400e',border:'#fde68a',btntext:'#1a1a1a'},
+  {name:'Noir',accent:'#e5e7eb',accent2:'#9ca3af',bg:'#000000',card:'#111111',head:'#ffffff',body:'#d1d5db',muted:'#6b7280',border:'#1f2937',btntext:'#000000'},
+  {name:'Cyber',accent:'#00ff9f',accent2:'#00e5ff',bg:'#050a14',card:'#0a1628',head:'#e0f2fe',body:'#7dd3fc',muted:'#38bdf8',border:'#0c4a6e',btntext:'#000000'},
+];
+
+const FONTS = [
+  {name:'Inter',label:'Modern Sans',stack:"'Inter', Helvetica, sans-serif"},
+  {name:'Merriweather',label:'Classic Serif',stack:"'Merriweather', Georgia, serif"},
+  {name:'Fira Code',label:'Dev Mono',stack:"'Fira Code', 'Courier New', monospace"},
+  {name:'Playfair',label:'Editorial',stack:"'Playfair Display', Georgia, serif"},
+  {name:'Roboto Mono',label:'Terminal',stack:"'Roboto Mono', monospace"},
+  {name:'Lato',label:'Friendly',stack:"'Lato', Helvetica, sans-serif"},
+];
+
+let activeTheme = 0;
+let activeFont = 0;
+
+// ════════════ INIT ════════════
+function init(){
+  renderTagLists();
+  renderProjectList();
+  renderExpList();
+  renderEduList();
+  renderBookList();
+  renderAwardList();
+  renderCustomList();
+  renderThemeGrid();
+  renderFontGrid();
+  applyTheme(0);
+}
+
+// ════════════ MAIN TABS ════════════
+function mainTab(name,el){
+  document.querySelectorAll('.nav-pill').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  // For future full-screen modes – currently everything is in editor view
+}
+
+// ════════════ SIDEBAR TABS ════════════
+function stab(name,el){
+  document.querySelectorAll('.sidebar-body').forEach(e=>e.style.display='none');
+  document.querySelectorAll('.stab').forEach(e=>e.classList.remove('active'));
+  document.getElementById('t-'+name).style.display='block';
+  el.classList.add('active');
+}
+
+// ════════════ THEMES ════════════
+function renderThemeGrid(){
+  const g=document.getElementById('theme-grid');
+  g.innerHTML=THEMES.map((th,i)=>`
+    <div class="theme-pill${i===activeTheme?' active':''}" onclick="applyTheme(${i})">
+      <div class="theme-swatch">
+        <div class="swatch" style="background:${th.bg};border:1px solid #444"></div>
+        <div class="swatch" style="background:${th.accent}"></div>
+        <div class="swatch" style="background:${th.accent2}"></div>
+      </div>
+      <span class="theme-pill-name">${th.name}</span>
+    </div>`).join('');
+}
+
+function applyTheme(i){
+  activeTheme=i;
+  const th=THEMES[i];
+  setCV('cc-accent','ct-accent',th.accent);
+  setCV('cc-accent2','ct-accent2',th.accent2);
+  setCV('cc-bg','ct-bg',th.bg);
+  setCV('cc-card','ct-card',th.card);
+  setCV('cc-head','ct-head',th.head);
+  setCV('cc-body','ct-body',th.body);
+  setCV('cc-muted','ct-muted',th.muted);
+  setCV('cc-border','ct-border',th.border);
+  setCV('cc-btntext','ct-btntext',th.btntext);
+  renderThemeGrid();render();
+}
+
+function setCV(cid,tid,val){
+  const ce=document.getElementById(cid),te=document.getElementById(tid);
+  if(ce)ce.value=val;if(te)te.value=val;
+}
+function syncC(cid,tid){document.getElementById(tid).value=document.getElementById(cid).value;}
+function syncCT(tid,cid){const v=document.getElementById(tid).value;if(/^#[0-9a-fA-F]{6}$/.test(v))document.getElementById(cid).value=v;}
+
+// ════════════ FONTS ════════════
+function renderFontGrid(){
+  const g=document.getElementById('font-grid');
+  g.innerHTML=FONTS.map((f,i)=>`
+    <div class="font-pill${i===activeFont?' active':''}" onclick="setFont(${i})" style="font-family:${f.stack}">
+      <span class="font-pill-name">${f.name}</span>
+      <span class="font-pill-label">${f.label}</span>
+    </div>`).join('');
+}
+function setFont(i){activeFont=i;renderFontGrid();render();}
+
+// ════════════ TAGS ════════════
+function renderTagLists(){
+  ['lang','fw','tools','learn','interest'].forEach(k=>{
+    const el=document.getElementById('tg-'+k);
+    if(!el)return;
+    el.innerHTML=T[k].map((t,i)=>`<span class="tag">${t}<span class="rm" onclick="rmTag('${k}',${i})">×</span></span>`).join('');
+  });
+}
+function addTag(k){const inp=document.getElementById('ai-'+k);const v=inp.value.trim();if(v&&!T[k].includes(v)){T[k].push(v);inp.value='';renderTagLists();render();}}
+function rmTag(k,i){T[k].splice(i,1);renderTagLists();render();}
+
+// ════════════ PROJECTS ════════════
+function renderProjectList(){
+  const el=document.getElementById('proj-list');
+  el.innerHTML=projects.map((p,i)=>`
+    <div class="proj-card">
+      <button class="rm-btn" onclick="rmProject(${i})">×</button>
+      <div class="card-title">${p.name||'Project'}</div>
+      <div class="field"><label>Name</label><input value="${p.name}" oninput="projects[${i}].name=this.value;render()"/></div>
+      <div class="field"><label>Language</label><input value="${p.lang}" oninput="projects[${i}].lang=this.value;render()"/></div>
+      <div class="field"><label>Description</label><input value="${p.desc}" oninput="projects[${i}].desc=this.value;render()"/></div>
+      <div class="field"><label>URL</label><input value="${p.url}" oninput="projects[${i}].url=this.value;render()"/></div>
+      <div style="display:flex;gap:6px;">
+        <div class="field" style="flex:1"><label>⭐ Stars</label><input type="number" value="${p.stars}" oninput="projects[${i}].stars=+this.value;render()"/></div>
+        <div class="field" style="flex:1"><label>🍴 Forks</label><input type="number" value="${p.forks}" oninput="projects[${i}].forks=+this.value;render()"/></div>
+      </div>
+      <div class="toggle-row" style="padding:4px 0;border:none;"><div class="toggle-row-label" style="font-size:11px;">⭐ Featured</div><div class="tog${p.featured?' on':''}" onclick="projects[${i}].featured=!projects[${i}].featured;this.classList.toggle('on');render()"></div></div>
+    </div>`).join('');
+}
+function addProject(){projects.push({name:'New Project',lang:'JavaScript',stars:0,forks:0,desc:'Description',url:'https://github.com/',featured:false});renderProjectList();render();}
+function rmProject(i){projects.splice(i,1);renderProjectList();render();}
+
+// ════════════ EXPERIENCE ════════════
+function renderExpList(){
+  const el=document.getElementById('exp-list');
+  el.innerHTML=experiences.map((e,i)=>`
+    <div class="exp-card">
+      <button class="rm-btn" onclick="rmExp(${i})">×</button>
+      <div class="field"><label>Role</label><input value="${e.role}" oninput="experiences[${i}].role=this.value;render()"/></div>
+      <div class="field"><label>Company</label><input value="${e.company}" oninput="experiences[${i}].company=this.value;render()"/></div>
+      <div class="field"><label>Period</label><input value="${e.period}" placeholder="2022 – Present" oninput="experiences[${i}].period=this.value;render()"/></div>
+      <div class="field"><label>Description</label><textarea oninput="experiences[${i}].desc=this.value;render()" style="min-height:52px">${e.desc}</textarea></div>
+    </div>`).join('');
+}
+function addExp(){experiences.push({role:'Role',company:'Company',period:'2024 – Present',desc:''});renderExpList();render();}
+function rmExp(i){experiences.splice(i,1);renderExpList();render();}
+
+function renderEduList(){
+  const el=document.getElementById('edu-list');
+  el.innerHTML=educations.map((e,i)=>`
+    <div class="exp-card">
+      <button class="rm-btn" onclick="rmEdu(${i})">×</button>
+      <div class="field"><label>Degree / Level</label><input value="${e.degree}" oninput="educations[${i}].degree=this.value;render()"/></div>
+      <div class="field"><label>School / Institution</label><input value="${e.school}" oninput="educations[${i}].school=this.value;render()"/></div>
+      <div class="field"><label>Year</label><input value="${e.year}" placeholder="2022" oninput="educations[${i}].year=this.value;render()"/></div>
+      <div class="field"><label>Notes</label><input value="${e.desc||''}" placeholder="GPA, honors…" oninput="educations[${i}].desc=this.value;render()"/></div>
+    </div>`).join('');
+}
+function addEdu(){educations.push({degree:'Degree',school:'Institution',year:'2024',desc:''});renderEduList();render();}
+function rmEdu(i){educations.splice(i,1);renderEduList();render();}
+
+// ════════════ BOOKS ════════════
+function renderBookList(){
+  const el=document.getElementById('book-list');
+  el.innerHTML=books.map((b,i)=>`
+    <div class="book-card">
+      <button class="rm-btn" onclick="rmBook(${i})">×</button>
+      <div class="field"><label>Title</label><input value="${b.title}" oninput="books[${i}].title=this.value;render()"/></div>
+      <div class="field"><label>Author</label><input value="${b.author}" oninput="books[${i}].author=this.value;render()"/></div>
+      <div class="field"><label>Rating</label><input value="${b.rating}" oninput="books[${i}].rating=this.value;render()"/></div>
+      <div class="field"><label>Status</label>
+        <select onchange="books[${i}].status=this.value;render()">
+          <option value="read"${b.status==='read'?' selected':''}>✅ Read</option>
+          <option value="reading"${b.status==='reading'?' selected':''}>📖 Reading</option>
+          <option value="want"${b.status==='want'?' selected':''}>🔖 Want to read</option>
+        </select>
+      </div>
+    </div>`).join('');
+}
+function addBook(){books.push({title:'Book Title',author:'Author',rating:'4.0',status:'want'});renderBookList();render();}
+function rmBook(i){books.splice(i,1);renderBookList();render();}
+
+// ════════════ AWARDS ════════════
+function renderAwardList(){
+  const el=document.getElementById('award-list');
+  el.innerHTML=awards.map((a,i)=>`
+    <div class="award-card">
+      <button class="rm-btn" onclick="rmAward(${i})">×</button>
+      <div class="field"><label>Title</label><input value="${a.title}" oninput="awards[${i}].title=this.value;render()"/></div>
+      <div class="field"><label>Org / Issuer</label><input value="${a.org}" oninput="awards[${i}].org=this.value;render()"/></div>
+      <div class="field"><label>Year</label><input value="${a.year}" oninput="awards[${i}].year=this.value;render()"/></div>
+      <div class="field"><label>Icon (emoji)</label><input value="${a.icon}" oninput="awards[${i}].icon=this.value;render()" style="font-size:18px;"/></div>
+    </div>`).join('');
+}
+function addAward(){awards.push({title:'Achievement Title',org:'Organization',year:'2024',icon:'🏆'});renderAwardList();render();}
+function rmAward(i){awards.splice(i,1);renderAwardList();render();}
+
+// ════════════ CUSTOM SECTIONS ════════════
+function renderCustomList(){
+  const el=document.getElementById('custom-list');
+  el.innerHTML=customSections.map((s,i)=>`
+    <div class="custom-card">
+      <button class="rm-btn" onclick="rmCustom(${i})">×</button>
+      <div class="field"><label>Section Title</label><input value="${s.title}" oninput="customSections[${i}].title=this.value;render()"/></div>
+      <div class="field"><label>HTML Content</label><textarea oninput="customSections[${i}].html=this.value;render()" style="min-height:80px;font-family:var(--mono);font-size:11px">${s.html}</textarea></div>
+    </div>`).join('');
+}
+function addCustomSection(){customSections.push({title:'My Section',html:'<p style="font-size:14px;color:#374151;">Your custom content here.</p>'});renderCustomList();render();}
+function rmCustom(i){customSections.splice(i,1);renderCustomList();render();}
+
+// ════════════ TOGGLES ════════════
+function togSec(el){secs[el.id]=!secs[el.id];el.classList.toggle('on',secs[el.id]);render();}
+function togFx(el){fxs[el.id]=!fxs[el.id];el.classList.toggle('on',fxs[el.id]);render();}
+function togSet(el){sets[el.id]=!sets[el.id];el.classList.toggle('on',sets[el.id]);render();}
+const sec=id=>secs['sec-'+id]!==false;
+const fx=id=>fxs['fx-'+id]!==false;
+
+// ════════════ VIEWPORT ════════════
+function setVP(mode,btn){
+  const f=document.getElementById('pframe');
+  f.className=mode;
+  document.querySelectorAll('.vpbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('preview-url').textContent=`devmail · ${mode}`;
+}
+
+// ════════════ CODE PANEL ════════════
+let codeOpen=false;
+function toggleCode(){
+  codeOpen=!codeOpen;
+  document.getElementById('codepanel').classList.toggle('hidden',!codeOpen);
+  document.getElementById('codebtn').textContent=codeOpen?'‹/› Hide':'‹/› Code';
+  if(codeOpen)document.getElementById('codeout').textContent=generateHTML();
+}
+
+// ════════════ TOAST ════════════
+function showToast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast '+type;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+// ════════════ COPY / DOWNLOAD ════════════
+function copyHTML(){navigator.clipboard.writeText(generateHTML()).then(()=>showToast('✓ HTML copied to clipboard!'));}
+function downloadHTML(){
+  const a=document.createElement('a');
+  const name=document.getElementById('f-name').value.trim().toLowerCase().replace(/\s+/g,'-')||'email';
+  a.href='data:text/html;charset=utf-8,'+encodeURIComponent(generateHTML());
+  a.download=`${name}-email.html`;a.click();
+  showToast('⬇ Downloaded successfully!');
+}
+
+// ════════════ SAVE / LOAD CONFIG ════════════
+function getConfig(){
+  return {T,projects,experiences,educations,books,awards,customSections,activeTheme,activeFont,
+    secs,fxs,sets,
+    fields:['f-avatar','f-name','f-pronouns','f-role','f-bio','f-email','f-website','f-location','f-phone','f-avail','f-avail-custom','f-years','f-projcount','f-stars','f-btn1','f-btn1url','f-btn2','f-btn2url','f-btn3','f-btn3url','f-footer','f-unsub','f-copyright','f-banner','f-bannerurl','f-bannerstyle','f-quote','f-quoteattr','f-subject','f-preheader','f-lang',
+    'ct-accent','ct-accent2','ct-bg','ct-card','ct-head','ct-body','ct-muted','ct-border','ct-btntext',
+    'l-maxw','l-radius','l-avsize','l-spacing','l-fontsize','l-headeralign','f-avshape',
+    's-github','s-twitter','s-linkedin','s-instagram','s-threads','s-facebook','s-youtube','s-devto','s-hashnode','s-medium','s-dribbble','s-behance','s-codepen','s-stackoverflow','s-discord','s-telegram','s-whatsapp','s-custom1-label','s-custom1-url','s-custom2-label','s-custom2-url'
+    ].reduce((acc,id)=>{const el=document.getElementById(id);if(el)acc[id]=el.value;return acc;},{})};
+}
+function saveConfig(){
+  const json=JSON.stringify(getConfig(),null,2);
+  const a=document.createElement('a');
+  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(json);
+  a.download='devmail-config.json';a.click();
+  showToast('💾 Config saved!');
+}
+function exportConfigString(){
+  navigator.clipboard.writeText(JSON.stringify(getConfig())).then(()=>showToast('📋 Config JSON copied!'));
+}
+function applyConfig(cfg){
+  if(!cfg)return;
+  if(cfg.T)Object.assign(T,cfg.T);
+  if(cfg.projects)projects=[...cfg.projects];
+  if(cfg.experiences)experiences=[...cfg.experiences];
+  if(cfg.educations)educations=[...cfg.educations];
+  if(cfg.books)books=[...cfg.books];
+  if(cfg.awards)awards=[...cfg.awards];
+  if(cfg.customSections)customSections=[...cfg.customSections];
+  if(cfg.secs)Object.assign(secs,cfg.secs);
+  if(cfg.fxs)Object.assign(fxs,cfg.fxs);
+  if(cfg.sets)Object.assign(sets,cfg.sets);
+  document.querySelectorAll('.tog[id^="sec-"]').forEach(t=>{const on=secs[t.id]!==false;t.classList.toggle('on',on);});
+  document.querySelectorAll('.tog[id^="fx-"]').forEach(t=>{const on=fxs[t.id]!==false;t.classList.toggle('on',on);});
+  document.querySelectorAll('.tog[id^="set-"]').forEach(t=>{const on=sets[t.id]!==false;t.classList.toggle('on',on);});
+  if(cfg.fields)Object.entries(cfg.fields).forEach(([id,val])=>{const el=document.getElementById(id);if(el)el.value=val;});
+  // sync color pickers
+  ['accent','accent2','bg','card','head','body','muted','border','btntext'].forEach(k=>{
+    const te=document.getElementById('ct-'+k),ce=document.getElementById('cc-'+k);
+    if(te&&ce&&/^#[0-9a-fA-F]{6}$/.test(te.value))ce.value=te.value;
+  });
+  if(cfg.activeTheme!==undefined)activeTheme=cfg.activeTheme;
+  if(cfg.activeFont!==undefined)activeFont=cfg.activeFont;
+  renderTagLists();renderProjectList();renderExpList();renderEduList();renderBookList();renderAwardList();renderCustomList();renderThemeGrid();renderFontGrid();render();
+}
+function loadConfig(evt){
+  const file=evt.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{try{applyConfig(JSON.parse(e.target.result));showToast('✓ Config loaded!');}catch{showToast('⚠ Invalid JSON','error');}};
+  reader.readAsText(file);
+}
+function importConfigFromField(){
+  try{applyConfig(JSON.parse(document.getElementById('import-json').value));showToast('✓ Config imported!');}
+  catch{showToast('⚠ Invalid JSON','error');}
+}
+function resetAll(){if(confirm('Reset all data to defaults?')){location.reload();}}
+
+// ════════════ HELPERS ════════════
+const g=id=>{const e=document.getElementById(id);return e?e.value.trim():'';}
+const gc=id=>{const e=document.getElementById(id);return e?e.value:'#000';}
+const gn=id=>{const e=document.getElementById(id);return e?+e.value:0;}
+
+const SOCIAL_DEF=[
+  {k:'github',label:'GitHub'},{k:'twitter',label:'Twitter'},{k:'linkedin',label:'LinkedIn'},
+  {k:'instagram',label:'Instagram'},{k:'threads',label:'Threads'},{k:'facebook',label:'Facebook'},
+  {k:'youtube',label:'YouTube'},{k:'devto',label:'Dev.to'},{k:'hashnode',label:'Hashnode'},
+  {k:'medium',label:'Medium'},{k:'dribbble',label:'Dribbble'},{k:'behance',label:'Behance'},
+  {k:'codepen',label:'Codepen'},{k:'stackoverflow',label:'StackOverflow'},
+  {k:'discord',label:'Discord'},{k:'telegram',label:'Telegram'},{k:'whatsapp',label:'WhatsApp'},
+];
+
+const LANG_COLORS={JavaScript:'#f7df1e',TypeScript:'#3178c6',Python:'#3572A5',HTML:'#e34c26',CSS:'#563d7c',Rust:'#dea584',Go:'#00ADD8',Java:'#b07219',Ruby:'#701516','C++':'#f34b7d',Swift:'#F05138',Kotlin:'#A97BFF',Dart:'#00B4AB',PHP:'#4F5D95'};
+const langDot=lang=>LANG_COLORS[lang]||'#8888aa';
+
+// ════════════ GENERATE HTML ════════════
+function generateHTML(){
+  const name=g('f-name'),role=g('f-role'),bio=g('f-bio'),avatar=g('f-avatar');
+  const email=g('f-email'),website=g('f-website'),location=g('f-location'),phone=g('f-phone');
+  const pronouns=g('f-pronouns'),avshape=g('f-avshape');
+  const btn1=g('f-btn1'),btn1url=g('f-btn1url')||`mailto:${email}`;
+  const btn2=g('f-btn2'),btn2url=g('f-btn2url')||website;
+  const btn3=g('f-btn3'),btn3url=g('f-btn3url');
+  const footer=g('f-footer'),unsub=g('f-unsub'),copyright=g('f-copyright');
+  const avail=g('f-avail'),availCustom=g('f-avail-custom');
+  const years=g('f-years'),projcount=g('f-projcount'),stars=g('f-stars');
+  const banner=g('f-banner'),bannerUrl=g('f-bannerurl'),bannerStyle=g('f-bannerstyle');
+  const quote=g('f-quote'),quoteAttr=g('f-quoteattr');
+  const preheader=g('f-preheader'),langDir=g('f-lang'),subject=g('f-subject');
+
+  const maxw=g('l-maxw')||'600',radius=g('l-radius')||'8';
+  const avsize=g('l-avsize')||'88',spacing=g('l-spacing')||'24';
+  const fontsize=g('l-fontsize')||'15',headerAlign=g('l-headeralign')||'center';
+
+  const ac=gc('cc-accent'),ac2=gc('cc-accent2'),bg=gc('cc-bg'),card=gc('cc-card');
+  const head=gc('cc-head'),body=gc('cc-body'),muted=gc('cc-muted'),border=gc('cc-border'),btntext=gc('cc-btntext');
+  const fontStack=FONTS[activeFont]?.stack||"'Inter',Helvetica,sans-serif";
+  const isRTL=langDir==='ar'||langDir==='he'||langDir==='fa';
+
+  const hr=fx('dividers')?`<hr style="width:100%;border:none;border-top:1px solid ${border};margin:0 0 ${spacing}px;"/>`:'';
+  const sp=`style="margin-bottom:${spacing}px;"`;
+  const shadow=fx('shadows')?`box-shadow:0 2px 12px rgba(0,0,0,.08);`:'';
+
+  // avatar shape
+  const avRadius=avshape==='circle'?'50%':avshape==='square'?`${radius}px`:'50%';
+  const avClip=avshape==='hexagon'?`style="clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);border-radius:0;"`:'';
+
+  // availability
+  const availMap={
+    open:{txt:'✅ Open to opportunities',bg:'#dcfce7',col:'#166534'},
+    busy:{txt:'🔴 Not available',bg:'#fee2e2',col:'#991b1b'},
+    freelance:{txt:'💼 Available for freelance',bg:'#fef3c7',col:'#92400e'},
+    contract:{txt:'🤝 Contract work only',bg:'#e0e7ff',col:'#3730a3'},
+    collab:{txt:'🛠️ Open to collaboration',bg:'#f0fdf4',col:'#166534'},
+    none:null
+  };
+  const av=availMap[avail];
+  const availTxt=availCustom||(av&&av.txt)||'';
+  const availHTML=av?`
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:16px;">
+<tbody><tr><td style="text-align:center;">
+  <span style="display:inline-block;background:${av.bg};color:${av.col};font-size:12px;font-weight:600;padding:5px 16px;border-radius:20px;">${availTxt}</span>
+</td></tr></tbody></table>`:'';
+
+  // banner
+  const bannerColors={accent:{bg:ac,col:btntext},green:{bg:'#16a34a',col:'#fff'},yellow:{bg:'#ca8a04',col:'#fff'},red:{bg:'#dc2626',col:'#fff'}};
+  const bc=bannerColors[bannerStyle]||bannerColors.accent;
+  const bannerHTML=banner?`
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:16px;">
+<tbody><tr><td>
+  <a href="${bannerUrl||'#'}" style="display:block;background:${bc.bg};color:${bc.col};font-size:13px;font-weight:600;padding:10px 20px;border-radius:${radius}px;text-align:center;text-decoration:none;">${banner} →</a>
+</td></tr></tbody></table>`:'';
+
+  // gradient header bg
+  const headerBg=fx('gradheader')?`background:linear-gradient(135deg,${ac}18,${ac2}14,transparent);border-radius:${radius}px;padding:20px;`:'padding:0;';
+
+  // quote
+  const quoteHTML=quote?`
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" ${sp}>
+<tbody><tr><td style="border-left:3px solid ${ac};padding:12px 18px;background:${card};border-radius:0 ${radius}px ${radius}px 0;">
+  <p style="font-size:16px;font-style:italic;color:${body};margin:0 0 4px;">${quote}</p>
+  ${quoteAttr?`<p style="font-size:12px;color:${muted};margin:0;">${quoteAttr}</p>`:''}
+</td></tr></tbody></table>${hr}`:'';
+
+  // stats row
+  const statItems=[[years,'Years Exp.'],[projcount,'Projects'],[stars,'★ Stars']].filter(([v])=>v);
+  const statsHTML=statItems.length?`
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:16px;">
+<tbody><tr>
+${statItems.map(([v,l])=>`<td style="text-align:center;padding:0 4px;">
+  <div style="background:${card};border:1px solid ${border};border-radius:${radius}px;padding:12px 8px;${shadow}">
+    <p style="font-size:20px;font-weight:700;color:${ac};margin:0;">${v}</p>
+    <p style="font-size:11px;color:${muted};margin:2px 0 0;">${l}</p>
+  </div>
+</td>`).join('')}
+</tr></tbody></table>`:'';
+
+  // skills col helper
+  const skillCol=(title,arr)=>arr.length===0?'':`
+<td class="stack-col" style="padding:0 3px;vertical-align:top;width:33%;">
+  <div style="background:${card};border-radius:${radius}px;padding:12px;${shadow}">
+    <p style="font-size:10px;font-weight:700;color:${muted};margin:0 0 7px;text-transform:uppercase;letter-spacing:.08em;">${title}</p>
+    <p style="font-size:13px;color:${body};margin:0;line-height:22px;">${arr.join(' &nbsp;·&nbsp; ')}</p>
+  </div>
+</td>`;
+
+  // learning items
+  const learnItem=item=>`
+<td class="stack-col" style="padding:0 3px;">
+  <div style="background:${card};border-radius:${radius}px;padding:10px;text-align:center;${shadow}">
+    <p style="font-size:13px;font-weight:600;color:${ac};margin:0;">${item}</p>
+  </div>
+</td>`;
+
+  // interest items
+  const interestItem=item=>`
+<td class="stack-col" style="padding:0 3px;">
+  <div style="background:${card};border-radius:${radius}px;padding:8px 12px;text-align:center;">
+    <p style="font-size:12px;color:${body};margin:0;">${item}</p>
+  </div>
+</td>`;
+
+  // project cards (2 per row)
+  const projectGrid=()=>{
+    let out='';
+    for(let i=0;i<projects.length;i+=2){
+      const pCard=p=>`
+<td class="stack-col" style="width:50%;padding:0 4px;vertical-align:top;">
+  <a href="${p.url}" style="text-decoration:none;display:block;">
+    <div style="border:1px solid ${border};border-radius:${radius}px;padding:14px;margin-bottom:8px;background:${p.featured?card:'transparent'};${p.featured?shadow:''}">
+      ${p.featured?`<p style="font-size:9px;color:${ac};font-weight:700;letter-spacing:.1em;margin:0 0 4px;text-transform:uppercase;">⭐ Featured</p>`:''}
+      <p style="font-size:14px;font-weight:600;color:${head};margin:0 0 4px;">${p.name}</p>
+      <p style="font-size:12px;color:${muted};margin:0 0 10px;line-height:1.5;">${p.desc}</p>
+      <table border="0" cellpadding="0" cellspacing="0" role="presentation">
+        <tr>
+          <td style="padding-right:10px;"><span style="font-size:11px;color:${muted};"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${langDot(p.lang)};margin-right:3px;"></span>${p.lang}</span></td>
+          <td style="padding-right:10px;"><span style="font-size:11px;color:${muted};">⭐ ${p.stars}</span></td>
+          ${p.forks>0?`<td><span style="font-size:11px;color:${muted};">🍴 ${p.forks}</span></td>`:''}
+        </tr>
+      </table>
+    </div>
+  </a>
+</td>`;
+      out+=`<tr>${pCard(projects[i])}${projects[i+1]?pCard(projects[i+1]):'<td style="width:50%;"></td>'}</tr>`;
+    }
+    return out;
+  };
+
+  // experience timeline
+  const expHTML=experiences.map(e=>`
+<tr>
+  <td style="padding:12px 0;border-bottom:1px solid ${border};padding-left:16px;border-left:2px solid ${ac};">
+    <p style="font-size:14px;font-weight:600;color:${head};margin:0;">${e.role}</p>
+    <p style="font-size:12px;color:${ac};margin:2px 0;font-weight:500;">${e.company} &nbsp;·&nbsp; <span style="color:${muted};">${e.period}</span></p>
+    ${e.desc?`<p style="font-size:13px;color:${body};margin:6px 0 0;line-height:1.5;">${e.desc}</p>`:''}
+  </td>
+</tr>`).join('');
+
+  // education list
+  const eduHTML=educations.map(e=>`
+<tr>
+  <td style="padding:10px 0;border-bottom:1px solid ${border};">
+    <p style="font-size:14px;font-weight:600;color:${head};margin:0;">${e.degree}</p>
+    <p style="font-size:12px;color:${muted};margin:2px 0 0;">${e.school}${e.year?` · ${e.year}`:''}${e.desc?` · ${e.desc}`:''}</p>
+  </td>
+</tr>`).join('');
+
+  // awards
+  const awardsHTML=awards.map(a=>`
+<tr>
+  <td style="padding:10px 0;border-bottom:1px solid ${border};">
+    <table border="0" cellpadding="0" cellspacing="0" role="presentation"><tbody><tr>
+      <td style="padding-right:12px;font-size:22px;vertical-align:middle;">${a.icon}</td>
+      <td>
+        <p style="font-size:13px;font-weight:600;color:${head};margin:0;">${a.title}</p>
+        <p style="font-size:11px;color:${muted};margin:2px 0 0;">${a.org}${a.year?' · '+a.year:''}</p>
+      </td>
+    </tr></tbody></table>
+  </td>
+</tr>`).join('');
+
+  // books
+  const statusBadge={read:{txt:'✅ Read',col:'#166534',bg:'#dcfce7'},reading:{txt:'📖 Reading',col:'#1e40af',bg:'#dbeafe'},want:{txt:'🔖 Want to read',col:'#6b7280',bg:'#f3f4f6'}};
+  const bookRows=books.map(b=>{
+    const sb=statusBadge[b.status]||statusBadge.read;
+    return `<tr>
+  <td style="padding:10px 0;border-bottom:1px solid ${border};">
+    <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tbody><tr>
+      <td><p style="font-size:14px;color:${head};margin:0;font-weight:600;">${b.title}</p>
+      <p style="font-size:12px;color:${muted};margin:2px 0 0;">${b.author} &nbsp;·&nbsp; ⭐ ${b.rating}</p></td>
+      <td style="text-align:right;"><span style="font-size:10px;font-weight:600;padding:3px 8px;border-radius:12px;background:${sb.bg};color:${sb.col};">${sb.txt}</span></td>
+    </tr></tbody></table>
+  </td>
+</tr>`;}).join('');
+
+  // social links
+  const socials=SOCIAL_DEF.map(({k,label})=>({label,url:g('s-'+k)})).filter(s=>s.url);
+  const c1label=g('s-custom1-label'),c1url=g('s-custom1-url');
+  const c2label=g('s-custom2-label'),c2url=g('s-custom2-url');
+  if(c1label&&c1url)socials.push({label:c1label,url:c1url});
+  if(c2label&&c2url)socials.push({label:c2label,url:c2url});
+  const socialHTML=socials.map(s=>`
+<td style="padding:0 4px 8px;">
+  <a href="${s.url}" style="display:inline-block;background:${card};border:1px solid ${border};border-radius:${radius}px;padding:7px 13px;font-size:12px;font-weight:600;color:${ac};text-decoration:none;">${s.label}</a>
+</td>`).join('');
+
+  // button gradient
+  const btnBg=fx('btngradient')?`linear-gradient(135deg,${ac},${ac2})`:`${ac}`;
+
+  // custom sections
+  const customHTML=customSections.map(s=>sec('custom')?`
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" ${sp}>
+<tbody><tr><td>
+  <p style="font-size:17px;font-weight:600;color:${head};margin:0 0 12px;">${s.title}</p>
+  ${s.html}
+</td></tr></tbody></table>${hr}`:'').join('');
+
+  // phone line
+  const phoneHTML=phone?`<p style="font-size:12px;color:${muted};margin:4px 0 0;">📞 ${phone}</p>`:'';
+
+  return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="${isRTL?'rtl':'ltr'}" lang="${langDir||'en'}">
+<head>
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"/>
+  <meta name="x-apple-disable-message-reformatting"/>
+  ${preheader?`<!-- Preheader: ${preheader} -->`:''}
+  ${subject?`<!-- Subject: ${subject} -->`:''}
+  <style>
+    *{font-family:${fontStack};}
+    body{margin:0;background-color:${bg};}
+    @media only screen and (max-width:600px){
+      .stack-col{display:block!important;width:100%!important;padding:0 0 8px 0!important;}
+      .hide-mobile{display:none!important;}
+      .mobile-full{width:100%!important;}
+    }
+    ${fx('darkmode')?`@media (prefers-color-scheme:dark){body,table{background-color:${bg}!important;color:${head}!important;}}`:''}
+  </style>
+</head>
+<body style="margin:0;background-color:${bg};">
+${preheader?`<div style="max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:transparent;">${preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>`:''} 
+<table border="0" width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:${bg};">
+<tbody><tr><td style="padding:0 12px;">
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="max-width:${maxw}px;margin:0 auto;padding:${spacing}px 0;">
+<tbody><tr><td>
+
+${sec('banner')&&banner?bannerHTML:''}
+
+${sec('header')?`
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:${spacing}px;">
+<tbody><tr><td style="text-align:${headerAlign};${headerBg}">
+  <img src="${avatar}" alt="${name}" width="${avsize}" height="${avsize}" style="display:inline-block;border-radius:${avRadius};object-fit:cover;border:3px solid ${border};${avshape==='hexagon'?'clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);border-radius:0;':''}"/>
+  <p style="font-size:24px;font-weight:700;color:${head};margin:14px 0 4px;">${name}${pronouns?`<span style="font-size:13px;font-weight:400;color:${muted};margin-left:8px;">(${pronouns})</span>`:''}</p>
+  <p style="font-size:14px;color:${muted};margin:0;">${role}</p>
+  ${location?`<p style="font-size:12px;color:${muted};margin:6px 0 0;">📍 ${location}</p>`:''}
+  ${phoneHTML}
+</td></tr></tbody></table>`:''}
+
+${sec('stats')&&statItems.length?statsHTML:''}
+${sec('avail')&&av?availHTML:''}
+${sec('header')||sec('avail')||sec('stats')?hr:''}
+
+${sec('quote')&&quote?quoteHTML:''}
+${sec('about')?`
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" ${sp}>
+<tbody><tr><td>
+  <p style="font-size:17px;font-weight:600;color:${head};margin:0 0 11px;">About Me</p>
+  <p style="font-size:${fontsize}px;line-height:1.7;color:${body};margin:0;">${bio}</p>
+</td></tr></tbody></table>${hr}`:''}
+
+${sec('skills')&&(T.lang.length||T.fw.length||T.tools.length)?`
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" ${sp}>
+<tbody>
+<tr><td><p style="font-size:17px;font-weight:600;color:${head};margin:0 0 14px;">🛠️ Skills</p></td></tr>
+<tr><td>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation"><tbody><tr>
+${skillCol('Languages',T.lang)}${skillCol('Frameworks',T.fw)}${skillCol('Tools',T.tools)}
+</tr></tbody></table>
+</td></tr></tbody></table>${hr}`:''}
+
+${sec('learn')&&T.learn.length?`
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" ${sp}>
+<tbody>
+<tr><td><p style="font-size:17px;font-weight:600;color:${head};margin:0 0 12px;">🌱 Currently Learning</p></td></tr>
+<tr><td>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation"><tbody><tr>
+${T.learn.map(learnItem).join('')}
+</tr></tbody></table>
+</td></tr></tbody></table>${hr}`:''}
+
+${sec('interests')&&T.interest.length?`
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" ${sp}>
+<tbody>
+<tr><td><p style="font-size:17px;font-weight:600;color:${head};margin:0 0 12px;">🔮 Interests</p></td></tr>
+<tr><td>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation"><tbody><tr>
+${T.interest.map(interestItem).join('')}
+</tr></tbody></table>
+</td></tr></tbody></table>${hr}`:''}
+
+${sec('experience')&&experiences.length?`
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" ${sp}>
+<tbody>
+<tr><td><p style="font-size:17px;font-weight:600;color:${head};margin:0 0 4px;">🏢 Experience</p></td></tr>
+<tr><td>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation"><tbody>${expHTML}</tbody></table>
+</td></tr></tbody></table>${hr}`:''}
+
+${sec('education')&&educations.length?`
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" ${sp}>
+<tbody>
+<tr><td><p style="font-size:17px;font-weight:600;color:${head};margin:0 0 4px;">🎓 Education</p></td></tr>
+<tr><td>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation"><tbody>${eduHTML}</tbody></table>
+</td></tr></tbody></table>${hr}`:''}
+
+${sec('projects')&&projects.length?`
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" ${sp}>
+<tbody>
+<tr><td><p style="font-size:17px;font-weight:600;color:${head};margin:0 0 14px;">📂 Projects</p></td></tr>
+<tr><td>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation"><tbody>${projectGrid()}</tbody></table>
+</td></tr></tbody></table>${hr}`:''}
+
+${sec('awards')&&awards.length?`
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" ${sp}>
+<tbody>
+<tr><td><p style="font-size:17px;font-weight:600;color:${head};margin:0 0 4px;">🏆 Awards & Certifications</p></td></tr>
+<tr><td>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation"><tbody>${awardsHTML}</tbody></table>
+</td></tr></tbody></table>${hr}`:''}
+
+${sec('books')&&books.length?`
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" ${sp}>
+<tbody>
+<tr><td><p style="font-size:17px;font-weight:600;color:${head};margin:0 0 12px;">📚 Reading List</p></td></tr>
+<tr><td>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation"><tbody>${bookRows}</tbody></table>
+</td></tr></tbody></table>${hr}`:''}
+
+${sec('social')&&socials.length?`
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" ${sp}>
+<tbody><tr><td>
+  <p style="font-size:17px;font-weight:600;color:${head};margin:0 0 12px;">🔗 Connect</p>
+  <table border="0" cellpadding="0" cellspacing="0" role="presentation"><tbody><tr style="flex-wrap:wrap;">${socialHTML}</tr></tbody></table>
+</td></tr></tbody></table>${hr}`:''}
+
+${customHTML}
+
+${sec('cta')?`
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" ${sp}>
+<tbody><tr><td style="text-align:center;padding:${spacing}px 0;">
+  <p style="font-size:${fontsize}px;color:${muted};margin:0 0 20px;">Let's connect and build something meaningful.</p>
+  <table border="0" cellpadding="0" cellspacing="0" role="presentation" align="center"><tbody><tr>
+    <td style="padding-right:10px;"><a href="${btn1url}" style="display:inline-block;background:${btnBg};color:${btntext};font-size:14px;font-weight:600;text-decoration:none;padding:13px 26px;border-radius:${radius}px;">${btn1}</a></td>
+    <td style="padding-right:10px;"><a href="${btn2url}" style="display:inline-block;background:transparent;color:${ac};font-size:14px;font-weight:600;text-decoration:none;padding:12px 24px;border-radius:${radius}px;border:1.5px solid ${ac};">${btn2}</a></td>
+    ${btn3&&btn3url?`<td><a href="${btn3url}" style="display:inline-block;background:transparent;color:${muted};font-size:14px;font-weight:500;text-decoration:none;padding:12px 24px;border-radius:${radius}px;border:1px solid ${border};">${btn3}</a></td>`:''}
+  </tr></tbody></table>
+</td></tr></tbody></table>`:''}
+
+${sec('footer')?`
+<hr style="width:100%;border:none;border-top:1px solid ${border};margin:0 0 16px;"/>
+<table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+<tbody><tr><td style="text-align:center;">
+  <p style="font-size:12px;color:#9ca3af;margin:0 0 4px;">${footer}</p>
+  ${copyright?`<p style="font-size:11px;color:#9ca3af;margin:0 0 4px;">${copyright}</p>`:''}
+  <p style="font-size:11px;color:#9ca3af;margin:0;"><a href="#" style="color:#9ca3af;text-decoration:underline;">${unsub}</a></p>
+</td></tr></tbody></table>`:''}
+
+</td></tr></tbody></table>
+</td></tr></tbody></table>
+</body></html>`;
+}
+
+// ════════════ RENDER ════════════
+let renderTimer;
+function render(){
+  clearTimeout(renderTimer);
+  renderTimer=setTimeout(()=>{
+    const html=generateHTML();
+    const f=document.getElementById('pframe');
+    const d=f.contentDocument||f.contentWindow.document;
+    d.open();d.write(html);d.close();
+    if(codeOpen)document.getElementById('codeout').textContent=html;
+    document.getElementById('char-count').textContent=html.length.toLocaleString()+'b';
+  },60);
+}
+
+init();render();
+</script>
+</body>
+</html>
